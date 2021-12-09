@@ -19,6 +19,18 @@ let currentGame = {
     level: 1
 }
 
+const howToPlay = `
+Move using the arrow keys.
+
+The goal of the game is to fall down 20 levels while collecting ores and
+avoiding falling stalactites. Spending more time in levels loses you points.
+
+Scoring:
+Copper: +500, Silver: +1000, Gold: +2500, Diamond: +5000,
+Falling down a level: +2500, Touching a falling stalactite: -10000
+Score decreases by 500 every second.
+`
+
 window.onload = function() {
     let gameConfig = {
         type: Phaser.AUTO,
@@ -57,7 +69,7 @@ class MainMenu extends Phaser.Scene {
         background.setScale(Math.max(game.config.width / background.width, game.config.height / background.height))
 
         this.TitleText = this.add.text(48, 96, "Untitled :D", {fontFamily: "Ubuntu", fontSize: "48px", fill: "#ffffff"})
-        this.HTPText = this.add.text(0, 204, "", {fontFamily: "Ubuntu", fontSize: "16px", fill: "#ffffff"})
+        this.HTPText = this.add.text(48, 212, "", {fontFamily: "Ubuntu", fontSize: "20px", fill: "#991111"})
         
         const playButton = this.add.text(48, 160, "Play", {fontFamily: "Ubuntu", fontSize: "24px", fill: "#bbbbbb"});
         playButton.setInteractive();
@@ -80,18 +92,7 @@ class MainMenu extends Phaser.Scene {
 
         HTPButton.on('pointerover', () => {
             HTPButton.setColor("#ffffff");
-            this.HTPText.setText(`
-                Move using the arrow keys.
-
-                The goal of the game is to fall down 20 levels while collecting ores
-                and avoiding enemies. Spending more time in levels loses you points.
-
-                Scoring:
-                Copper: +500, Silver: +1000, Gold: +2500, Diamond: +5000, Falling down a level: +2500
-                
-                Touching a falling stalactite: -10000 & restarts the level
-                Score decreases by 500 every second.
-                `);
+            this.HTPText.setText(howToPlay);
         });
 
         HTPButton.on('pointerout', () => {
@@ -236,12 +237,12 @@ class PlayGame extends Phaser.Scene {
             loop: true
         });
 
-        /*this.StalactiteTimer = this.time.addEvent({
+        this.StalactiteTimer = this.time.addEvent({
             callback: this.spawnStalactite,
             callbackScope: this,
-            delay: 600,
+            delay: 400 - (10 * currentGame.level),
             loop: true
-        });*/
+        });
     }
 
     generateLevelObjects() {
@@ -328,11 +329,13 @@ class PlayGame extends Phaser.Scene {
         currentGame.score += 5000;
     }
 
-   /*spawnStalactite() {
-        console.log("jees");
-        this.stalactiteGroup.create(Phaser.Math.Between(0, game.config.width), 0, "stalactite");
-        this.stalactiteGroup.setVelocityY(gameOptions.maxSpeed);
-    }*/
+    spawnStalactite() {
+        let x = Phaser.Math.Between(0, game.config.width);
+        if (Phaser.Math.Between(0,1) && !(x > (game.config.width / 2 - 30) && x < (game.config.width / 2 + 30))) {
+            this.stalactiteGroup.create(x, 0, "stalactite");
+            this.stalactiteGroup.setVelocityY(gameOptions.maxSpeed);
+        }
+    }
 
     playerDied(player, stalactite) {
         currentGame.score -= 10000
@@ -394,9 +397,6 @@ class PlayGame extends Phaser.Scene {
         if(this.cursors.up.isDown && this.player.body.touching.down) {
             this.player.setVelocityY(-gameOptions.playerGravity / 2)
         }
-        
-        //this.stalactiteGroup.create(Phaser.Math.Between(0, game.config.width), 0, "stalactite");
-        //this.stalactiteGroup.setVelocityY(gameOptions.maxSpeed);
 
         if (this.player.y > game.config.height) {
             currentGame.score += 2500;
