@@ -13,6 +13,7 @@ const gameOptions = {
     platformPairCount: 8
 }
 
+// There are better ways to do this
 let currentGame = {
     time: 0,
     score: 0,
@@ -56,6 +57,7 @@ window.onload = function() {
     window.focus();
 }
 
+// Main menu scene
 class MainMenu extends Phaser.Scene {
     constructor() {
         super("MainMenu");
@@ -105,6 +107,7 @@ class MainMenu extends Phaser.Scene {
     }
 }
 
+// Game over scene
 class GameOver extends Phaser.Scene {
     constructor() {
         super("GameOver");
@@ -119,7 +122,7 @@ class GameOver extends Phaser.Scene {
 
         this.GameOverText = this.add.text(24, 12, "You Completed the game!", {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"});
         this.scoreText = this.add.text(24, 36, "Final score " + currentGame.score, {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"});
-        this.timeText = this.add.text(24, 60, "Final time " + Math.round(currentGame.time * 100) / 100 + "seconds", {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"});
+        this.timeText = this.add.text(24, 60, "Final time " + Math.round(currentGame.time * 100) / 100 + " seconds", {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"});
 
         const playButton = this.add.text(48, 160, "Play Again", {fontFamily: "Ubuntu", fontSize: "24px", fill: "#bbbbbb"});
         playButton.setInteractive();
@@ -154,10 +157,10 @@ class GameOver extends Phaser.Scene {
     }
 
     update() {
-        
     }
 }
 
+// Main scene to playing
 class PlayGame extends Phaser.Scene {
     constructor() {
         super("PlayGame");
@@ -177,6 +180,7 @@ class PlayGame extends Phaser.Scene {
     }
 
     create() {
+        // Creating non level specific elements
         let background = this.add.image(game.config.width / 2, game.config.height / 2, "background");
         background.setScale(Math.max(game.config.width / background.width, game.config.height / background.height))
 
@@ -198,7 +202,8 @@ class PlayGame extends Phaser.Scene {
         this.levelText = this.add.text(24, 12, "Level " + currentGame.level, {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"})
         this.scoreText = this.add.text(24, 36, "Score " + currentGame.score, {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"})
         this.timeText = this.add.text(24, 60, "Time " + currentGame.time, {fontFamily: "Ubuntu", fontSize: "24px", fill: "#ffffff"})
-       
+        
+        // Creating the level
         this.platformGroup = this.physics.add.group({
             immovable: true,
             allowGravity: false
@@ -211,10 +216,12 @@ class PlayGame extends Phaser.Scene {
         this.stalactiteGroup = this.physics.add.group({});
 
         this.generateLevelObjects();
-
+        
+        // Spawning the player
         this.player = this.physics.add.sprite(game.config.width / 2, game.config.height * 0.05, "player");
         this.player.body.gravity.y = gameOptions.playerGravity;
-
+        
+        // Adding collision between objects
         this.physics.add.collider(this.player, this.platformGroup);
         this.physics.add.collider(this.platformGroup, this.copperGroup);
         this.physics.add.collider(this.platformGroup, this.silverGroup);
@@ -230,6 +237,7 @@ class PlayGame extends Phaser.Scene {
 
         this.cursors = this.input.keyboard.createCursorKeys();
 
+        // Event timers
         this.TriggerTimer = this.time.addEvent({
             callback: this.scoring,
             callbackScope: this,
@@ -294,6 +302,7 @@ class PlayGame extends Phaser.Scene {
         }
     }
 
+    // Unloading level specific elements
     unloadLevel() {
         this.platformGroup.clear(true, false);
         this.copperGroup.clear(true, false);
@@ -301,14 +310,19 @@ class PlayGame extends Phaser.Scene {
         this.goldGroup.clear(true, false);
         this.diamondGroup.clear(true, false);
         this.stalactiteGroup.clear(true, false);
+
+        // Resetting the players position and velocity
         this.player.setPosition(game.config.width / 2, game.config.height * 0.05);
+        this.player.body.velocity.y = gameOptions.maxSpeed;
     }
 
+    // Time penalty
     scoring() {
         currentGame.score -= 50;
         currentGame.time += 0.1;
     }
 
+    // There is probably a better way to do this to all of the ores using the same function
     collectCopper(player, ore) {
         ore.disableBody(true, true);
         currentGame.score += 500;
@@ -329,6 +343,7 @@ class PlayGame extends Phaser.Scene {
         currentGame.score += 5000;
     }
 
+    // Spawning falling stalactites
     spawnStalactite() {
         let x = Phaser.Math.Between(0, game.config.width);
         if (Phaser.Math.Between(0,1) && !(x > (game.config.width / 2 - 30) && x < (game.config.width / 2 + 30))) {
@@ -337,15 +352,20 @@ class PlayGame extends Phaser.Scene {
         }
     }
 
+    // Removing points and resetting the players position & velocity
     playerDied(player, stalactite) {
         currentGame.score -= 10000
         player.setPosition(game.config.width / 2, game.config.height * 0.05);
+        this.player.body.velocity.y = gameOptions.maxSpeed;
     }
 
+    
     update() {
         this.timeText.setText("Time " + Math.round(currentGame.time * 100) / 100 + " seconds")
         this.scoreText.setText("Score " + currentGame.score)
 
+        // Input handling
+        // There is a built in way to handle acceleration in Phaser but I wanted to try to do it manually and succeeded :D
         if (this.cursors.left.isDown) {
             // if moving to the opposite direction, deaccelerate with multiplier
             // else if already close to max speed, set to max speed
@@ -362,6 +382,9 @@ class PlayGame extends Phaser.Scene {
                 this.player.body.velocity.x -= gameOptions.acceleration;
             }
         } else if (this.cursors.right.isDown) {
+            // if moving to the opposite direction, deaccelerate with multiplier
+            // else if already close to max speed, set to max speed
+            // else, accelerate
             if (this.player.body.velocity.x < 0) {
                 if (this.player.body.touching.down) {
                     this.player.body.velocity.x += 2 * gameOptions.acceleration;
@@ -394,10 +417,12 @@ class PlayGame extends Phaser.Scene {
             }
         }
 
+        // Jumping
         if(this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(-gameOptions.playerGravity / 2)
+            this.player.setVelocityY(-gameOptions.playerGravity / 2);
         }
 
+        // Level transition
         if (this.player.y > game.config.height) {
             currentGame.score += 2500;
 
