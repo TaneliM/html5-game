@@ -175,7 +175,7 @@ class PlayGame extends Phaser.Scene {
         this.load.image("silver", "assets/silver.png");
         this.load.image("gold", "assets/gold.png");
         this.load.image("diamond", "assets/diamond.png");
-        this.load.spritesheet("player", "assets/player.png", {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet("player", "assets/player.png", {frameWidth: 24, frameHeight: 24});
         this.load.spritesheet("stalactite", "assets/stalactite.png", {frameWidth: 16, frameHeight: 16});
     }
 
@@ -236,6 +236,27 @@ class PlayGame extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.stalactiteGroup, this.playerDied, null, this);
 
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        // Animations
+        this.anims.create({
+            key: "left",
+            frames: this.anims.generateFrameNumbers("player", {start: 0, end: 3}),
+            frameRate: 10,
+            repeat: -1
+        })
+
+        this.anims.create({
+            key: "turn",
+            frames: [{key: "player", frame: 4}],
+            frameRate: 20
+        })
+
+        this.anims.create({
+            key: "right",
+            frames: this.anims.generateFrameNumbers("player", {start: 5, end: 8}),
+            frameRate: 10,
+            repeat: -1
+        })
 
         // Event timers
         this.TriggerTimer = this.time.addEvent({
@@ -367,6 +388,7 @@ class PlayGame extends Phaser.Scene {
         // Input handling
         // There is a built in way to handle acceleration in Phaser but I wanted to try to do it manually and succeeded :D
         if (this.cursors.left.isDown) {
+            this.player.anims.play("left", true);
             // if moving to the opposite direction, deaccelerate with multiplier
             // else if already close to max speed, set to max speed
             // else, accelerate
@@ -382,6 +404,7 @@ class PlayGame extends Phaser.Scene {
                 this.player.body.velocity.x -= gameOptions.acceleration;
             }
         } else if (this.cursors.right.isDown) {
+            this.player.anims.play("right", true);
             // if moving to the opposite direction, deaccelerate with multiplier
             // else if already close to max speed, set to max speed
             // else, accelerate
@@ -397,6 +420,7 @@ class PlayGame extends Phaser.Scene {
                 this.player.body.velocity.x += gameOptions.acceleration;
             }
         } else {
+            this.player.anims.play("turn", true);
             // Acceleration multiplier changes depending if the player is or is not touching the ground
             if (this.player.body.touching.down) {
                 if (this.player.body.velocity.x <= 2 * gameOptions.acceleration && this.player.body.velocity.x >= 2 * -gameOptions.acceleration) {
